@@ -1,5 +1,8 @@
 package Frames;
 
+import Global.EAnchor;
+import Global.EDrawingType;
+import Global.EShapeType;
 import Shapes.GShape;
 
 import javax.swing.*;
@@ -11,6 +14,9 @@ import java.util.Vector;
 
 public class GDrawingPanel extends JPanel {
     private GToolBar gToolBar;
+
+    private EAnchor currentAnchor;
+
     private Vector<GShape> shapes;
     private GShape currentShape;
     private GShape selectedShape;
@@ -24,6 +30,8 @@ public class GDrawingPanel extends JPanel {
         this.addMouseListener(mouseHandler);
         this.addMouseMotionListener(mouseHandler);
 
+        this.currentAnchor = EAnchor.eNone;
+
         this.shapes = new Vector<>();
     }
     public void associaton(GToolBar gToolBar) {
@@ -34,7 +42,7 @@ public class GDrawingPanel extends JPanel {
         @Override
         public void mouseClicked(MouseEvent e) {
 
-            if(gToolBar.getCurrenType().getDrawingType() == EDrawingType.eNPoint){
+            if(gToolBar.getCurrentType().getDrawingType() == EDrawingType.eNPoint){
                 if(e.getClickCount()==1){
                     mouseClickedOneTime(e);
                 }else if(e.getClickCount()==2){
@@ -52,7 +60,7 @@ public class GDrawingPanel extends JPanel {
 
         @Override
         public void mouseMoved(MouseEvent e){
-            if(gToolBar.getCurrenType() == GToolType.Polygon){
+            if(gToolBar.getCurrentType() == EShapeType.Polygon){
                 if(currentShape != null){
                     currentShape.setEnd(e.getX(), e.getY());
                     repaint();
@@ -66,25 +74,25 @@ public class GDrawingPanel extends JPanel {
 
         @Override
         public void mousePressed(MouseEvent e){
-            if(gToolBar.getCurrenType()==GToolType.Select){
+            if(gToolBar.getCurrentType()== EShapeType.Select){
                 startTransformer(e.getX(), e.getY());
-            }else if(gToolBar.getCurrenType().getDrawingType()==EDrawingType.e2Point){
+            }else if(gToolBar.getCurrentType().getDrawingType()== EDrawingType.e2Point){
                 startTransformer(e.getX(), e.getY());
             }
         }
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            if(gToolBar.getCurrenType()==GToolType.Select){
+            if(gToolBar.getCurrentType()== EShapeType.Select){
                 keepTransformer(e.getX(), e.getY());
-            }else if(gToolBar.getCurrenType().getDrawingType()==EDrawingType.e2Point){
+            }else if(gToolBar.getCurrentType().getDrawingType()== EDrawingType.e2Point){
                 keepTransformer(e.getX(), e.getY());
             }
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            if(gToolBar.getCurrenType().getDrawingType() == EDrawingType.e2Point) {
+            if(gToolBar.getCurrentType().getDrawingType() == EDrawingType.e2Point) {
                 endTransformer(e.getX(), e.getY());
             }
         }
@@ -110,22 +118,40 @@ public class GDrawingPanel extends JPanel {
     }
 
     private void startTransformer(int x, int y) {
-        if(gToolBar.getCurrenType()==GToolType.Select){
-            selectedShape=null;
-            for(int i=shapes.size()-1;i>=0;i--){
-                if(shapes.get(i).getContains(x,y)){
-                    selectedShape=shapes.get(i);
-                    prevX=x;
-                    prevY=y;
+        if(gToolBar.getCurrentType()== EShapeType.Select){
+
+            selectedShape = null;
+            currentAnchor = EAnchor.eNone;
+
+            for(int i=shapes.size()-1; i>=0; i--){
+
+                GShape shape = shapes.get(i);
+
+                // 1. 앵커 먼저 검사
+                EAnchor anchor = shape.getAnchor(x, y);
+
+                if(anchor != EAnchor.eNone){
+                    selectedShape = shape;
+                    currentAnchor = anchor;
+                    prevX = x;
+                    prevY = y;
+                    break;
+                }
+
+                // 2. 도형 내부 검사
+                if(shape.getContains(x, y)){
+                    selectedShape = shape;
+                    currentAnchor = EAnchor.eNone;
+                    prevX = x;
+                    prevY = y;
                     break;
                 }
             }
-
+            System.out.println("선택된 도형: " + selectedShape + " 선택된 Anchor: " + currentAnchor);
             repaint();
-
-        }else{
-            currentShape=gToolBar.getCurrenType().getShape();
-
+        }
+        else{
+            currentShape=gToolBar.getCurrentType().getShape();
             if(currentShape!=null){
                 currentShape.setStart(x,y);
                 selectedShape=null;
@@ -133,9 +159,19 @@ public class GDrawingPanel extends JPanel {
         }
     }
     private void keepTransformer(int x, int y){
-        if(gToolBar.getCurrenType()==GToolType.Select){
+        if(gToolBar.getCurrentType()== EShapeType.Select){
             if(selectedShape!=null){
-                selectedShape.transfer(x, y);
+                int dx = x - prevX;
+                int dy = y - prevY;
+                if (currentAnchor == EAnchor.eNone) {
+                    selectedShape.transfer(dx, dy);
+                } else if (currentAnchor == EAnchor.eRotate){
+                } else {
+                    selectedShape.resize(currentAnchor, dx, dy);
+                }
+
+                prevX = x;
+                prevY = y;
                 repaint();
             }
         }else if(currentShape!=null){
@@ -148,7 +184,9 @@ public class GDrawingPanel extends JPanel {
             currentShape.setEnd(x, y);
             shapes.add(currentShape);
             selectedShape = currentShape;
+            gToolBar.setSelectedIndex(0);
             currentShape = null;
+            System.out.println("선택된 도형: " + selectedShape + " 선택된 Anchor: " + currentAnchor);
             repaint();
         }
     }
@@ -160,7 +198,6 @@ public class GDrawingPanel extends JPanel {
         for(GShape shape : shapes){
             if(shape==selectedShape){
                 shape.drawSelected(graphics2D);
-                System.out.println(shape.getClass().getName());
             }
             shape.draw(graphics2D);
         }

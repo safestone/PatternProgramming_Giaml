@@ -1,10 +1,14 @@
 package Shapes;
 
+import Global.EAnchor;
+
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 
 public class GOval extends GShape{
     public int startX, startY;
     public int endX, endY;
+    private static final int MIN_SIZE = 20;
 
     @Override
     public GOval clone() {
@@ -40,7 +44,56 @@ public class GOval extends GShape{
     }
 
     @Override
-    public void transfer(int x, int y) {
+    public void transfer(int dx, int dy) {
+        Ellipse2D oval = (Ellipse2D) geometry;
 
+        oval.setFrame(oval.getX() + dx, oval.getY() + dy, oval.getWidth(), oval.getHeight());
+    }
+
+    @Override
+    public void resize(EAnchor anchor, int dx, int dy) {
+        Ellipse2D oval = (Ellipse2D) geometry;
+
+        switch (anchor) {
+            case eNW:
+                if(oval.getWidth()-dx < MIN_SIZE || oval.getHeight()-dy < MIN_SIZE) return;
+                oval.setFrame(oval.getX()+dx, oval.getY()+dy, oval.getWidth()-dx, oval.getHeight()-dy);
+                break;
+
+            case eNN:
+                if(oval.getHeight()-dy < MIN_SIZE) return;
+                oval.setFrame(oval.getX(), oval.getY()+dy, oval.getWidth(), oval.getHeight()-dy);
+                break;
+
+            case eNE:
+                if(oval.getWidth()+dx < MIN_SIZE || oval.getHeight()-dy < MIN_SIZE) return;
+                oval.setFrame(oval.getX(), oval.getY()+dy, oval.getWidth()+dx, oval.getHeight()-dy);
+                break;
+
+            case eWW:
+                if(oval.getWidth()-dx < MIN_SIZE) return;
+                oval.setFrame(oval.getX()+dx, oval.getY(), oval.getWidth()-dx, oval.getHeight());
+                break;
+
+            case eEE:
+                if(oval.getWidth()+dx < MIN_SIZE) return;
+                oval.setFrame(oval.getX(), oval.getY(), oval.getWidth()+dx, oval.getHeight());
+                break;
+
+            case eSW:
+                if(oval.getWidth()-dx < MIN_SIZE || oval.getHeight()+dy < MIN_SIZE) return;
+                oval.setFrame(oval.getX()+dx, oval.getY(), oval.getWidth()-dx, oval.getHeight()+dy);
+                break;
+
+            case eSS:
+                if(oval.getHeight()+dy < MIN_SIZE) return;
+                oval.setFrame(oval.getX(), oval.getY(), oval.getWidth(), oval.getHeight()+dy);
+                break;
+
+            case eSE:
+                if(oval.getWidth()+dx < MIN_SIZE || oval.getHeight()+dy < MIN_SIZE) return;
+                oval.setFrame(oval.getX(), oval.getY(), oval.getWidth()+dx, oval.getHeight()+dy);
+                break;
+        }
     }
 }

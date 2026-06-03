@@ -1,8 +1,8 @@
-package Frames;
+package Global;
 
 import Shapes.*;
 
-public enum GToolType {
+public enum EShapeType {
 
     Select(null, null),
 
@@ -21,7 +21,7 @@ public enum GToolType {
     private GShape shape;
     private EDrawingType drawingType;
 
-    GToolType(
+    EShapeType(
             GShape shape,
             EDrawingType drawingType
     ){

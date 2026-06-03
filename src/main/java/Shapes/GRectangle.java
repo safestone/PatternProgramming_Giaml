@@ -1,11 +1,13 @@
 package Shapes;
 
-import java.awt.*;
+import Global.EAnchor;
+
 import java.awt.geom.Rectangle2D;
 
 public class GRectangle extends GShape{
     public int startX, startY;
     public int endX, endY;
+    private static final int MIN_SIZE = 20;
 
     @Override
     public GRectangle clone() {
@@ -42,6 +44,56 @@ public class GRectangle extends GShape{
     public void transfer(int dx, int dy) {
         Rectangle2D rect = (Rectangle2D) geometry;
 
-        rect.setFrame(rect.getX()+dx, rect.getY()+dy, rect.getWidth(), rect.getHeight());
+        rect.setFrame(rect.getX() + dx, rect.getY() + dy, rect.getWidth(), rect.getHeight());
+
     }
+
+    @Override
+    public void resize(EAnchor anchor, int dx, int dy) {
+        Rectangle2D rect = (Rectangle2D) geometry;
+
+        switch (anchor) {
+            case eNW:
+                if(rect.getWidth()-dx < MIN_SIZE || rect.getHeight()-dy < MIN_SIZE) return;
+                rect.setFrame(rect.getX()+dx, rect.getY()+dy, rect.getWidth()-dx, rect.getHeight()-dy);
+                break;
+
+            case eNN:
+                if(rect.getHeight()-dy < MIN_SIZE) return;
+                rect.setFrame(rect.getX(), rect.getY()+dy, rect.getWidth(), rect.getHeight()-dy);
+                break;
+
+            case eNE:
+                if(rect.getWidth()+dx < MIN_SIZE || rect.getHeight()-dy < MIN_SIZE) return;
+                rect.setFrame(rect.getX(), rect.getY()+dy, rect.getWidth()+dx, rect.getHeight()-dy);
+                break;
+
+            case eWW:
+                if(rect.getWidth()-dx < MIN_SIZE) return;
+                rect.setFrame(rect.getX()+dx, rect.getY(), rect.getWidth()-dx, rect.getHeight());
+                break;
+
+            case eEE:
+                if(rect.getWidth()+dx < MIN_SIZE) return;
+                rect.setFrame(rect.getX(), rect.getY(), rect.getWidth()+dx, rect.getHeight());
+                break;
+
+            case eSW:
+                if(rect.getWidth()-dx < MIN_SIZE || rect.getHeight()+dy < MIN_SIZE) return;
+                rect.setFrame(rect.getX()+dx, rect.getY(), rect.getWidth()-dx, rect.getHeight()+dy);
+                break;
+
+            case eSS:
+                if(rect.getHeight()+dy < MIN_SIZE) return;
+                rect.setFrame(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()+dy);
+                break;
+
+            case eSE:
+                if(rect.getWidth()+dx < MIN_SIZE || rect.getHeight()+dy < MIN_SIZE) return;
+                rect.setFrame(rect.getX(), rect.getY(), rect.getWidth()+dx, rect.getHeight()+dy);
+                break;
+        }
+    }
+
+
 }
