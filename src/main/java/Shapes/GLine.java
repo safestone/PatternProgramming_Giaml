@@ -72,6 +72,11 @@ public class GLine extends GShape{
     }
 
     @Override
+    public void rotate(double angle) {
+
+    }
+
+    @Override
     public boolean getContains(int x, int y) {
         Line2D line = (Line2D) geometry;
         return line.ptSegDist(x, y) < 5;

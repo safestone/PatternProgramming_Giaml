@@ -23,7 +23,7 @@ public class GMainFrame extends JFrame {
         this.gMenuBar = new GMenuBar();
         this.gToolBar = new GToolBar();
         this.gDrawingPanel = new GDrawingPanel();
-        this.gDrawingPanel.associaton(gToolBar);
+        this.gDrawingPanel.association(gToolBar);
 
         this.setJMenuBar(gMenuBar);
         this.add(gToolBar, BorderLayout.NORTH);
