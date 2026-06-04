@@ -21,6 +21,7 @@ public class GDrawingPanel extends JPanel {
     private GShape currentShape;
     private GShape selectedShape;
 
+    private boolean isRotating;
     private int prevX, prevY;
 
     public GDrawingPanel() {
@@ -33,8 +34,10 @@ public class GDrawingPanel extends JPanel {
         this.currentAnchor = EAnchor.eNone;
 
         this.shapes = new Vector<>();
+
+        this.isRotating = false;
     }
-    public void associaton(GToolBar gToolBar) {
+    public void association(GToolBar gToolBar) {
         this.gToolBar = gToolBar;
     }
 
@@ -92,6 +95,10 @@ public class GDrawingPanel extends JPanel {
 
         @Override
         public void mouseReleased(MouseEvent e) {
+            if (currentAnchor == EAnchor.eRotate) {
+                isRotating = false;
+                repaint();
+            }
             if(gToolBar.getCurrentType().getDrawingType() == EDrawingType.e2Point) {
                 endTransformer(e.getX(), e.getY());
             }
@@ -135,6 +142,10 @@ public class GDrawingPanel extends JPanel {
                     currentAnchor = anchor;
                     prevX = x;
                     prevY = y;
+
+                    if (currentAnchor == EAnchor.eRotate) {
+                        isRotating = true;
+                    }
                     break;
                 }
 
@@ -166,6 +177,15 @@ public class GDrawingPanel extends JPanel {
                 if (currentAnchor == EAnchor.eNone) {
                     selectedShape.transfer(dx, dy);
                 } else if (currentAnchor == EAnchor.eRotate){
+                    Rectangle bounds = selectedShape.getBounds();
+                    double cx = bounds.getCenterX();
+                    double cy = bounds.getCenterY();
+
+                    double oldAngle = Math.atan2(prevY - cy, prevX - cx);
+                    double newAngle = Math.atan2(y-cy, x-cx);
+
+                    double delta = newAngle - oldAngle;
+                    selectedShape.rotate(delta);
                 } else {
                     selectedShape.resize(currentAnchor, dx, dy);
                 }
@@ -196,7 +216,7 @@ public class GDrawingPanel extends JPanel {
         super.paintComponent(g);
         Graphics2D graphics2D = (Graphics2D) g;
         for(GShape shape : shapes){
-            if(shape==selectedShape){
+            if(shape==selectedShape && !isRotating){
                 shape.drawSelected(graphics2D);
             }
             shape.draw(graphics2D);

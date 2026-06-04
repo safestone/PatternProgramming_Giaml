@@ -68,6 +68,19 @@ public class GPolygon extends GShape {
         );
     }
     @Override
+    public void rotate(double angle) {
+        Rectangle bounds = path.getBounds();
+
+        double cs = bounds.getCenterX();
+        double cy = bounds.getCenterY();
+
+        AffineTransform at = AffineTransform.getRotateInstance(angle, cs, cy);
+
+        path.transform(at);
+
+        geometry = path;
+    }
+    @Override
     public void resize(EAnchor anchor, int dx, int dy) {
 
         Rectangle bounds = geometry.getBounds();
@@ -177,4 +190,5 @@ public class GPolygon extends GShape {
 
         geometry = path;
     }
+
 }

@@ -2,6 +2,8 @@ package Shapes;
 
 import Global.EAnchor;
 
+import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 
 public class GRectangle extends GShape{
@@ -94,6 +96,7 @@ public class GRectangle extends GShape{
                 break;
         }
     }
+
 
 
 }
