@@ -62,23 +62,17 @@ public class GPolygon extends GShape {
 
     @Override
     public void draw(Graphics2D g2d){
-        g2d.draw(path);
 
-        g2d.draw(new Line2D.Double(lastX, lastY, previewX, previewY)
+        g2d.draw(getTransformedShape());
+
+        g2d.draw(
+                new Line2D.Double(
+                        lastX,
+                        lastY,
+                        previewX,
+                        previewY
+                )
         );
-    }
-    @Override
-    public void rotate(double angle) {
-        Rectangle bounds = path.getBounds();
-
-        double cs = bounds.getCenterX();
-        double cy = bounds.getCenterY();
-
-        AffineTransform at = AffineTransform.getRotateInstance(angle, cs, cy);
-
-        path.transform(at);
-
-        geometry = path;
     }
     @Override
     public void resize(EAnchor anchor, int dx, int dy) {
@@ -190,5 +184,4 @@ public class GPolygon extends GShape {
 
         geometry = path;
     }
-
 }

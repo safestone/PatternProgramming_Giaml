@@ -7,7 +7,7 @@ import java.awt.geom.AffineTransform;
 
 public abstract class GShape implements Cloneable{
     protected Shape geometry;
-    protected double rotation = 45;
+    protected double rotation = 0;
     private GAnchor anchor;
 
 
@@ -43,14 +43,27 @@ public abstract class GShape implements Cloneable{
     public Shape getTransformedShape() {
         Rectangle bounds = geometry.getBounds();
 
-        double cx = bounds.getX();
-        double cy = bounds.getY();
+        double cx = bounds.getCenterX();
+        double cy = bounds.getCenterY();
 
         AffineTransform at = new AffineTransform();
         at.rotate(Math.toRadians(rotation), cx, cy);
 
         return at.createTransformedShape(geometry);
     }
+    public double getRotation() {
+        return rotation;
+    }
+    public Point getCenter(){
+
+        Rectangle bounds = geometry.getBounds();
+
+        return new Point(
+                (int)bounds.getCenterX(),
+                (int)bounds.getCenterY()
+        );
+    }
+
     public abstract void setStart(int x, int y);
     public abstract void setEnd(int x, int y);
     public void setCont(int x, int y){};

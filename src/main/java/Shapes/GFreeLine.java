@@ -152,5 +152,4 @@ public class GFreeLine extends GShape{
         geometry = path;
     }
 
-
 }

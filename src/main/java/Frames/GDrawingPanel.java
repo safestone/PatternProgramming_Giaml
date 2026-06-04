@@ -21,8 +21,9 @@ public class GDrawingPanel extends JPanel {
     private GShape currentShape;
     private GShape selectedShape;
 
-    private boolean isRotating;
     private int prevX, prevY;
+    private double startAngle;
+    private boolean isRotating = false;
 
     public GDrawingPanel() {
         this.setBackground(Color.WHITE);
@@ -34,8 +35,6 @@ public class GDrawingPanel extends JPanel {
         this.currentAnchor = EAnchor.eNone;
 
         this.shapes = new Vector<>();
-
-        this.isRotating = false;
     }
     public void association(GToolBar gToolBar) {
         this.gToolBar = gToolBar;
@@ -95,10 +94,8 @@ public class GDrawingPanel extends JPanel {
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            if (currentAnchor == EAnchor.eRotate) {
-                isRotating = false;
-                repaint();
-            }
+            isRotating = false;
+            repaint();
             if(gToolBar.getCurrentType().getDrawingType() == EDrawingType.e2Point) {
                 endTransformer(e.getX(), e.getY());
             }
@@ -142,8 +139,9 @@ public class GDrawingPanel extends JPanel {
                     currentAnchor = anchor;
                     prevX = x;
                     prevY = y;
-
-                    if (currentAnchor == EAnchor.eRotate) {
+                    if(anchor == EAnchor.eRotate){
+                        Point center = shape.getCenter();
+                        startAngle = Math.atan2(y-center.y, x-center.x);
                         isRotating = true;
                     }
                     break;
@@ -176,17 +174,13 @@ public class GDrawingPanel extends JPanel {
                 int dy = y - prevY;
                 if (currentAnchor == EAnchor.eNone) {
                     selectedShape.transfer(dx, dy);
-                } else if (currentAnchor == EAnchor.eRotate){
-                    Rectangle bounds = selectedShape.getBounds();
-                    double cx = bounds.getCenterX();
-                    double cy = bounds.getCenterY();
-
-                    double oldAngle = Math.atan2(prevY - cy, prevX - cx);
-                    double newAngle = Math.atan2(y-cy, x-cx);
-
-                    double delta = newAngle - oldAngle;
+                } else if(currentAnchor == EAnchor.eRotate){
+                    Point center = selectedShape.getCenter();
+                    double currentAngle = Math.atan2(y-center.y, x-center.x);
+                    double delta = Math.toDegrees(currentAngle-startAngle);
                     selectedShape.rotate(delta);
-                } else {
+                    startAngle = currentAngle;
+                }else {
                     selectedShape.resize(currentAnchor, dx, dy);
                 }
 
