@@ -4,6 +4,7 @@ import Global.EAnchor;
 import Global.EDrawingType;
 import Global.EShapeType;
 import Shapes.GShape;
+import Shapes.GText;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,7 +44,9 @@ public class GDrawingPanel extends JPanel {
     public class MouseHandler implements MouseListener, MouseMotionListener {
         @Override
         public void mouseClicked(MouseEvent e) {
-
+            if(e.getClickCount()==2&&selectedShape instanceof GText gText){
+                editText(gText);
+            }
             if(gToolBar.getCurrentType().getDrawingType() == EDrawingType.eNPoint){
                 if(e.getClickCount()==1){
                     mouseClickedOneTime(e);
@@ -52,6 +55,7 @@ public class GDrawingPanel extends JPanel {
                 }
             }
         }
+
         public void mouseClickedOneTime(MouseEvent e) {
             if (currentShape == null) {
                 startTransformer(e.getX(), e.getY());
@@ -80,6 +84,9 @@ public class GDrawingPanel extends JPanel {
                 startTransformer(e.getX(), e.getY());
             }else if(gToolBar.getCurrentType().getDrawingType()== EDrawingType.e2Point){
                 startTransformer(e.getX(), e.getY());
+            } else if(gToolBar.getCurrentType().getDrawingType()== EDrawingType.eText) {
+                startTransformer(e.getX(), e.getY());
+                endTransformer(e.getX(), e.getY());
             }
         }
 
@@ -112,8 +119,26 @@ public class GDrawingPanel extends JPanel {
         }
 
 
+
     }
 
+    private void editText(GText gText) {
+        String text=JOptionPane.showInputDialog("Edit Text",gText.getText());
+
+        if(text!=null){
+            gText.setText(text);
+        }
+
+        String size=JOptionPane.showInputDialog("Font Size",gText.getFontSize());
+
+        if(size!=null){
+            try{
+                gText.setFontSize(Integer.parseInt(size));
+            }catch(NumberFormatException ignored){}
+        }
+
+        repaint();
+    }
     private void contTransformer(int x, int y) {
         if(currentShape != null) {
             currentShape.setCont(x, y);

@@ -16,7 +16,7 @@ public enum EShapeType {
 
     FreeLine(new GFreeLine(), EDrawingType.e2Point),
 
-    Text(null, null);
+    Text(new GText(), EDrawingType.eText);
 
     private GShape shape;
     private EDrawingType drawingType;
