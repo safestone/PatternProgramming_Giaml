@@ -8,9 +8,7 @@ import Shapes.GText;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.util.Vector;
 
 public class GDrawingPanel extends JPanel {
@@ -21,6 +19,7 @@ public class GDrawingPanel extends JPanel {
     private Vector<GShape> shapes;
     private GShape currentShape;
     private GShape selectedShape;
+    private GShape copiedShape;
 
     private int prevX, prevY;
     private double startAngle;
@@ -33,6 +32,10 @@ public class GDrawingPanel extends JPanel {
         this.addMouseListener(mouseHandler);
         this.addMouseMotionListener(mouseHandler);
 
+        KeyHandler keyHandler = new KeyHandler();
+        this.addKeyListener(keyHandler);
+        this.setFocusable(true);
+
         this.currentAnchor = EAnchor.eNone;
 
         this.shapes = new Vector<>();
@@ -40,112 +43,6 @@ public class GDrawingPanel extends JPanel {
     public void association(GToolBar gToolBar) {
         this.gToolBar = gToolBar;
     }
-
-    public class MouseHandler implements MouseListener, MouseMotionListener {
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if(e.getClickCount()==2&&selectedShape instanceof GText gText){
-                editText(gText);
-            }
-            if(gToolBar.getCurrentType().getDrawingType() == EDrawingType.eNPoint){
-                if(e.getClickCount()==1){
-                    mouseClickedOneTime(e);
-                }else if(e.getClickCount()==2){
-                    mouseClickedTwoTime(e);
-                }
-            }
-        }
-
-        public void mouseClickedOneTime(MouseEvent e) {
-            if (currentShape == null) {
-                startTransformer(e.getX(), e.getY());
-            } else {
-                contTransformer(e.getX(), e.getY());
-            }
-        }
-
-        @Override
-        public void mouseMoved(MouseEvent e){
-            if(gToolBar.getCurrentType() == EShapeType.Polygon){
-                if(currentShape != null){
-                    currentShape.setEnd(e.getX(), e.getY());
-                    repaint();
-                }
-            }
-        }
-
-        public void mouseClickedTwoTime(MouseEvent e) {
-            endTransformer(e.getX(), e.getY());
-        }
-
-        @Override
-        public void mousePressed(MouseEvent e){
-            if(gToolBar.getCurrentType()== EShapeType.Select){
-                startTransformer(e.getX(), e.getY());
-            }else if(gToolBar.getCurrentType().getDrawingType()== EDrawingType.e2Point){
-                startTransformer(e.getX(), e.getY());
-            } else if(gToolBar.getCurrentType().getDrawingType()== EDrawingType.eText) {
-                startTransformer(e.getX(), e.getY());
-                endTransformer(e.getX(), e.getY());
-            }
-        }
-
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            if(gToolBar.getCurrentType()== EShapeType.Select){
-                keepTransformer(e.getX(), e.getY());
-            }else if(gToolBar.getCurrentType().getDrawingType()== EDrawingType.e2Point){
-                keepTransformer(e.getX(), e.getY());
-            }
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            isRotating = false;
-            repaint();
-            if(gToolBar.getCurrentType().getDrawingType() == EDrawingType.e2Point) {
-                endTransformer(e.getX(), e.getY());
-            }
-        }
-
-        @Override
-        public void mouseEntered(MouseEvent e) {
-
-        }
-
-        @Override
-        public void mouseExited(MouseEvent e) {
-
-        }
-
-
-
-    }
-
-    private void editText(GText gText) {
-        String text=JOptionPane.showInputDialog("Edit Text",gText.getText());
-
-        if(text!=null){
-            gText.setText(text);
-        }
-
-        String size=JOptionPane.showInputDialog("Font Size",gText.getFontSize());
-
-        if(size!=null){
-            try{
-                gText.setFontSize(Integer.parseInt(size));
-            }catch(NumberFormatException ignored){}
-        }
-
-        repaint();
-    }
-    private void contTransformer(int x, int y) {
-        if(currentShape != null) {
-            currentShape.setCont(x, y);
-            repaint();
-        }
-    }
-
     private void startTransformer(int x, int y) {
         if(gToolBar.getCurrentType()== EShapeType.Select){
 
@@ -193,6 +90,7 @@ public class GDrawingPanel extends JPanel {
         }
     }
     private void keepTransformer(int x, int y){
+        System.out.println("Resize 대상: "+selectedShape);
         if(gToolBar.getCurrentType()== EShapeType.Select){
             if(selectedShape!=null){
                 int dx = x - prevX;
@@ -229,6 +127,160 @@ public class GDrawingPanel extends JPanel {
             repaint();
         }
     }
+    private void copyShape() {
+        if(selectedShape == null) {
+            return;
+        }
+
+        this.copiedShape = selectedShape.clone();
+    }
+
+    private void pasteShape() {
+        if(copiedShape == null) {
+            return;
+        }
+        GShape shape = copiedShape.clone();
+        shape.transfer(20, 20);
+        shapes.add(shape);
+        selectedShape=shape;
+        repaint();
+    }
+
+    private void deleteShape() {
+        if(selectedShape != null) {
+            shapes.remove(selectedShape);
+            selectedShape = null;
+            repaint();
+        }
+    }
+    public class KeyHandler implements KeyListener {
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if(e.isControlDown()&&e.getKeyCode() == KeyEvent.VK_C) {
+                copyShape();
+            }
+            if(e.isControlDown()&&e.getKeyCode() == KeyEvent.VK_V) {
+                pasteShape();
+            }
+            if(e.getKeyCode() == KeyEvent.VK_DELETE) {
+                deleteShape();
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+
+        }
+    }
+
+
+    public class MouseHandler implements MouseListener, MouseMotionListener {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if(e.getClickCount()==2&&selectedShape instanceof GText gText){
+                editText(gText);
+            }
+            if(gToolBar.getCurrentType().getDrawingType() == EDrawingType.eNPoint){
+                if(e.getClickCount()==1){
+                    mouseClickedOneTime(e);
+                }else if(e.getClickCount()==2){
+                    mouseClickedTwoTime(e);
+                }
+            }
+        }
+
+        public void mouseClickedOneTime(MouseEvent e) {
+            if (currentShape == null) {
+                startTransformer(e.getX(), e.getY());
+            } else {
+                contTransformer(e.getX(), e.getY());
+            }
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e){
+            if(gToolBar.getCurrentType() == EShapeType.Polygon){
+                if(currentShape != null){
+                    currentShape.setEnd(e.getX(), e.getY());
+                    repaint();
+                }
+            }
+        }
+
+        public void mouseClickedTwoTime(MouseEvent e) {
+            endTransformer(e.getX(), e.getY());
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e){
+            requestFocusInWindow();
+
+            if(gToolBar.getCurrentType()== EShapeType.Select){
+                startTransformer(e.getX(), e.getY());
+            }else if(gToolBar.getCurrentType().getDrawingType()== EDrawingType.e2Point){
+                startTransformer(e.getX(), e.getY());
+            } else if(gToolBar.getCurrentType().getDrawingType()== EDrawingType.eText) {
+                startTransformer(e.getX(), e.getY());
+                endTransformer(e.getX(), e.getY());
+            }
+        }
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if(gToolBar.getCurrentType()== EShapeType.Select){
+                keepTransformer(e.getX(), e.getY());
+            }else if(gToolBar.getCurrentType().getDrawingType()== EDrawingType.e2Point){
+                keepTransformer(e.getX(), e.getY());
+            }
+        }
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            isRotating = false;
+            repaint();
+            if(gToolBar.getCurrentType().getDrawingType() == EDrawingType.e2Point) {
+                endTransformer(e.getX(), e.getY());
+            }
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+        }
+    }
+
+    private void editText(GText gText) {
+        String text=JOptionPane.showInputDialog("Edit Text",gText.getText());
+
+        if(text!=null){
+            gText.setText(text);
+        }
+
+        String size=JOptionPane.showInputDialog("Font Size",gText.getFontSize());
+
+        if(size!=null){
+            try{
+                gText.setFontSize(Integer.parseInt(size));
+            }catch(NumberFormatException ignored){}
+        }
+
+        repaint();
+    }
+    private void contTransformer(int x, int y) {
+        if(currentShape != null) {
+            currentShape.setCont(x, y);
+            repaint();
+        }
+    }
+
+
 
     @Override
     protected void paintComponent(Graphics g) {

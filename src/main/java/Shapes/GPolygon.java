@@ -4,6 +4,7 @@ import Global.EAnchor;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 
@@ -15,7 +16,18 @@ public class GPolygon extends GShape {
 
     private int previewX;
     private int previewY;
+    @Override
+    public GPolygon clone(){
 
+        GPolygon shape=(GPolygon)super.clone();
+
+        if(this.path!=null){
+            shape.path=(Path2D.Double)this.path.clone();
+            shape.geometry=shape.path;
+        }
+
+        return shape;
+    }
     @Override
     public void setStart(int x, int y){
         path=new Path2D.Double();
@@ -65,14 +77,7 @@ public class GPolygon extends GShape {
 
         g2d.draw(getTransformedShape());
 
-        g2d.draw(
-                new Line2D.Double(
-                        lastX,
-                        lastY,
-                        previewX,
-                        previewY
-                )
-        );
+        g2d.draw(new Line2D.Double(lastX, lastY, previewX, previewY));
     }
     @Override
     public void resize(EAnchor anchor, int dx, int dy) {

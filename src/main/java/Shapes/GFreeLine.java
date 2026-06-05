@@ -12,13 +12,14 @@ public class GFreeLine extends GShape{
     @Override
     public GFreeLine clone(){
 
-        GFreeLine cloned = (GFreeLine) super.clone();
+        GFreeLine shape=(GFreeLine)super.clone();
 
-        if (geometry != null) {
-            cloned.geometry = (Shape)((Path2D)geometry).clone();
+        if(this.path!=null){
+            shape.path=(Path2D.Double)this.path.clone();
+            shape.geometry=shape.path;
         }
 
-        return cloned;
+        return shape;
     }
     @Override
     public void setStart(int x, int y) {

@@ -7,6 +7,7 @@ import java.awt.geom.AffineTransform;
 
 public abstract class GShape implements Cloneable{
     protected Shape geometry;
+
     protected double rotation = 0;
     private GAnchor anchor;
 
@@ -18,7 +19,10 @@ public abstract class GShape implements Cloneable{
     @Override
     public GShape clone() {
         try {
-            return (GShape) super.clone();
+            GShape cloned = (GShape) super.clone();
+            cloned.anchor = new GAnchor();
+
+            return cloned;
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }
