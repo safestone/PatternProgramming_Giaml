@@ -44,7 +44,7 @@ public class GText extends GShape {
 
     @Override
     public void draw(Graphics2D graphics2D){
-
+        graphics2D.setColor(lineColor);
         graphics2D.setFont(new Font("Arial", Font.PLAIN, fontSize));
 
         graphics2D.drawString(text,x,y);
@@ -71,6 +71,11 @@ public class GText extends GShape {
 
     @Override
     public void resize(EAnchor anchor,int dx,int dy){
+    }
+
+    @Override
+    public String getShapeName() {
+        return "텍스트";
     }
 
     public int getFontSize() {

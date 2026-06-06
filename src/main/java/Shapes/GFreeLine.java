@@ -153,4 +153,9 @@ public class GFreeLine extends GShape{
         geometry = path;
     }
 
+    @Override
+    public String getShapeName() {
+        return "자유선";
+    }
+
 }

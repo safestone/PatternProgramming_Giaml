@@ -10,7 +10,8 @@ public abstract class GShape implements Cloneable{
 
     protected double rotation = 0;
     private GAnchor anchor;
-
+    protected Color lineColor = Color.BLACK;
+    protected Color fillColor = null;
 
     public GShape() {
         anchor = new GAnchor();
@@ -28,6 +29,14 @@ public abstract class GShape implements Cloneable{
         }
     }
     public void draw(Graphics2D graphics2D) {
+        Shape shape = getTransformedShape();
+
+        if(fillColor != null) {
+            graphics2D.setColor(fillColor);
+            graphics2D.fill(shape);
+        }
+
+        graphics2D.setColor(lineColor);
         graphics2D.draw(getTransformedShape());
     }
     public boolean getContains(int x, int y) {
@@ -38,6 +47,8 @@ public abstract class GShape implements Cloneable{
         return anchor.getAnchor(x, y);
     }
     public void drawSelected(Graphics2D g2d){
+        g2d.setColor(Color.BLACK);
+
         Rectangle bounds = getTransformedShape().getBounds();
         g2d.draw(bounds);
 
@@ -62,10 +73,23 @@ public abstract class GShape implements Cloneable{
 
         Rectangle bounds = geometry.getBounds();
 
-        return new Point(
-                (int)bounds.getCenterX(),
-                (int)bounds.getCenterY()
-        );
+        return new Point((int)bounds.getCenterX(), (int)bounds.getCenterY());
+    }
+
+    public Color getLineColor() {
+        return lineColor;
+    }
+
+    public void setLineColor(Color lineColor) {
+        this.lineColor = lineColor;
+    }
+
+    public Color getFillColor() {
+        return fillColor;
+    }
+
+    public void setFillColor(Color fillColor) {
+        this.fillColor = fillColor;
     }
 
     public abstract void setStart(int x, int y);
@@ -73,7 +97,7 @@ public abstract class GShape implements Cloneable{
     public void setCont(int x, int y){};
     public abstract void transfer(int dx, int dy);
     public abstract void resize(EAnchor anchor, int dx, int dy);
-
+    public abstract String getShapeName();
     public void rotate(double angle) {
         rotation += angle;
     }

@@ -74,9 +74,8 @@ public class GPolygon extends GShape {
 
     @Override
     public void draw(Graphics2D g2d){
-
+        g2d.setColor(lineColor);
         g2d.draw(getTransformedShape());
-
         g2d.draw(new Line2D.Double(lastX, lastY, previewX, previewY));
     }
     @Override
@@ -188,5 +187,10 @@ public class GPolygon extends GShape {
         path.transform(at);
 
         geometry = path;
+    }
+
+    @Override
+    public String getShapeName() {
+        return "폴리곤";
     }
 }

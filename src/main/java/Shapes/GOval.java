@@ -96,4 +96,9 @@ public class GOval extends GShape{
                 break;
         }
     }
+
+    @Override
+    public String getShapeName() {
+        return "원";
+    }
 }

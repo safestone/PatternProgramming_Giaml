@@ -7,6 +7,7 @@ public class GMainFrame extends JFrame {
     private GMenuBar gMenuBar;
     private GToolBar gToolBar;
     private GDrawingPanel gDrawingPanel;
+    private GPropertyPanel gPropertyPanel;
 
     public GMainFrame() throws HeadlessException {
         super("Graphic Editor");
@@ -23,10 +24,21 @@ public class GMainFrame extends JFrame {
         this.gMenuBar = new GMenuBar();
         this.gToolBar = new GToolBar();
         this.gDrawingPanel = new GDrawingPanel();
+        this.gPropertyPanel = new GPropertyPanel();
+
+
         this.gDrawingPanel.association(gToolBar);
+        this.gDrawingPanel.setPropertyPanel(gPropertyPanel);
+        this.gPropertyPanel.setRepaintListener(
+                () -> gDrawingPanel.repaint()
+        );
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, gDrawingPanel, gPropertyPanel);
+
+        splitPane.setResizeWeight(0.8);
 
         this.setJMenuBar(gMenuBar);
         this.add(gToolBar, BorderLayout.NORTH);
-        this.add(gDrawingPanel, BorderLayout.CENTER);
+        this.add(splitPane, BorderLayout.CENTER);
     }
 }

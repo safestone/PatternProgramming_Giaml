@@ -13,6 +13,7 @@ import java.util.Vector;
 
 public class GDrawingPanel extends JPanel {
     private GToolBar gToolBar;
+    private GPropertyPanel gPropertyPanel;
 
     private EAnchor currentAnchor;
 
@@ -42,6 +43,9 @@ public class GDrawingPanel extends JPanel {
     }
     public void association(GToolBar gToolBar) {
         this.gToolBar = gToolBar;
+    }
+    public void setPropertyPanel(GPropertyPanel gPropertyPanel) {
+        this.gPropertyPanel = gPropertyPanel;
     }
     private void startTransformer(int x, int y) {
         if(gToolBar.getCurrentType()== EShapeType.Select){
@@ -78,6 +82,7 @@ public class GDrawingPanel extends JPanel {
                     break;
                 }
             }
+            gPropertyPanel.setShape(selectedShape);
             System.out.println("선택된 도형: " + selectedShape + " 선택된 Anchor: " + currentAnchor);
             repaint();
         }
@@ -86,11 +91,11 @@ public class GDrawingPanel extends JPanel {
             if(currentShape!=null){
                 currentShape.setStart(x,y);
                 selectedShape=null;
+                gPropertyPanel.setShape(null);
             }
         }
     }
     private void keepTransformer(int x, int y){
-        System.out.println("Resize 대상: "+selectedShape);
         if(gToolBar.getCurrentType()== EShapeType.Select){
             if(selectedShape!=null){
                 int dx = x - prevX;
@@ -106,7 +111,6 @@ public class GDrawingPanel extends JPanel {
                 }else {
                     selectedShape.resize(currentAnchor, dx, dy);
                 }
-
                 prevX = x;
                 prevY = y;
                 repaint();
@@ -121,9 +125,18 @@ public class GDrawingPanel extends JPanel {
             currentShape.setEnd(x, y);
             shapes.add(currentShape);
             selectedShape = currentShape;
+            if(selectedShape!=null) {
+                gPropertyPanel.setShape(selectedShape);
+            }
             gToolBar.setSelectedIndex(0);
             currentShape = null;
             System.out.println("선택된 도형: " + selectedShape + " 선택된 Anchor: " + currentAnchor);
+            repaint();
+        }
+    }
+    private void contTransformer(int x, int y) {
+        if(currentShape != null) {
+            currentShape.setCont(x, y);
             repaint();
         }
     }
@@ -143,6 +156,7 @@ public class GDrawingPanel extends JPanel {
         shape.transfer(20, 20);
         shapes.add(shape);
         selectedShape=shape;
+        gPropertyPanel.setShape(selectedShape);
         repaint();
     }
 
@@ -150,9 +164,30 @@ public class GDrawingPanel extends JPanel {
         if(selectedShape != null) {
             shapes.remove(selectedShape);
             selectedShape = null;
+            gPropertyPanel.setShape(null);
             repaint();
         }
     }
+
+    private void editText(GText gText) {
+        String text=JOptionPane.showInputDialog("Edit Text",gText.getText());
+
+        if(text!=null){
+            gText.setText(text);
+        }
+
+        String size=JOptionPane.showInputDialog("Font Size",gText.getFontSize());
+
+        if(size!=null){
+            try{
+                gText.setFontSize(Integer.parseInt(size));
+            }catch(NumberFormatException ignored){}
+        }
+
+        repaint();
+    }
+
+
     public class KeyHandler implements KeyListener {
 
         @Override
@@ -256,29 +291,7 @@ public class GDrawingPanel extends JPanel {
         }
     }
 
-    private void editText(GText gText) {
-        String text=JOptionPane.showInputDialog("Edit Text",gText.getText());
 
-        if(text!=null){
-            gText.setText(text);
-        }
-
-        String size=JOptionPane.showInputDialog("Font Size",gText.getFontSize());
-
-        if(size!=null){
-            try{
-                gText.setFontSize(Integer.parseInt(size));
-            }catch(NumberFormatException ignored){}
-        }
-
-        repaint();
-    }
-    private void contTransformer(int x, int y) {
-        if(currentShape != null) {
-            currentShape.setCont(x, y);
-            repaint();
-        }
-    }
 
 
 

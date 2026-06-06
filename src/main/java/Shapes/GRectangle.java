@@ -95,5 +95,10 @@ public class GRectangle extends GShape{
         }
     }
 
+    @Override
+    public String getShapeName() {
+        return "사각형";
+    }
+
 
 }
