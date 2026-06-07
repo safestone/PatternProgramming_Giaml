@@ -63,7 +63,7 @@ public class GMainFrame extends JFrame {
             JFileChooser fileChooser = new JFileChooser();
 
             fileChooser.setFileFilter(new FileNameExtensionFilter("Graphic Files (*txt)", "txt"));
-            int result = fileChooser.showSaveDialog(this);
+            int result = fileChooser.showOpenDialog(this);
 
             if(result == JFileChooser.APPROVE_OPTION) {
                 gDrawingPanel.load(fileChooser.getSelectedFile());
