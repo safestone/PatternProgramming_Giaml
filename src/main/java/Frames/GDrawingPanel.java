@@ -6,6 +6,10 @@ import Global.EShapeType;
 import Shapes.GShape;
 import Shapes.GText;
 import Tool.GFileManager;
+import Transformers.GResizer;
+import Transformers.GRotator;
+import Transformers.GTransformer;
+import Transformers.GTranslator;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,6 +20,7 @@ import java.util.Vector;
 public class GDrawingPanel extends JPanel {
     private GToolBar gToolBar;
     private GPropertyPanel gPropertyPanel;
+    private GTransformer transformer;
 
     private EAnchor currentAnchor;
 
@@ -24,8 +29,6 @@ public class GDrawingPanel extends JPanel {
     private GShape selectedShape;
     private GShape copiedShape;
 
-    private int prevX, prevY;
-    private double startAngle;
     private boolean isRotating = false;
 
     public GDrawingPanel() {
@@ -62,25 +65,29 @@ public class GDrawingPanel extends JPanel {
                 // 1. 앵커 먼저 검사
                 EAnchor anchor = shape.getAnchor(x, y);
 
-                if(anchor != EAnchor.eNone){
-                    selectedShape = shape;
-                    currentAnchor = anchor;
-                    prevX = x;
-                    prevY = y;
-                    if(anchor == EAnchor.eRotate){
-                        Point center = shape.getCenter();
-                        startAngle = Math.atan2(y-center.y, x-center.x);
+                if(anchor!=EAnchor.eNone){
+                    selectedShape=shape;
+                    currentAnchor=anchor;
+
+                    if(anchor==EAnchor.eRotate){
+                        transformer=new GRotator(shape);
                         isRotating = true;
+                    }else{
+                        transformer=new GResizer(shape,anchor);
                     }
+
+                    transformer.start(x,y);
                     break;
                 }
 
                 // 2. 도형 내부 검사
-                if(shape.getContains(x, y)){
-                    selectedShape = shape;
-                    currentAnchor = EAnchor.eNone;
-                    prevX = x;
-                    prevY = y;
+                if(shape.getContains(x,y)){
+                    selectedShape=shape;
+                    currentAnchor=EAnchor.eNone;
+
+                    transformer=new GTranslator(shape);
+                    transformer.start(x,y);
+
                     break;
                 }
             }
@@ -97,42 +104,37 @@ public class GDrawingPanel extends JPanel {
             }
         }
     }
-    private void keepTransformer(int x, int y){
-        if(gToolBar.getCurrentType()== EShapeType.Select){
-            if(selectedShape!=null){
-                int dx = x - prevX;
-                int dy = y - prevY;
-                if (currentAnchor == EAnchor.eNone) {
-                    selectedShape.transfer(dx, dy);
-                } else if(currentAnchor == EAnchor.eRotate){
-                    Point center = selectedShape.getCenter();
-                    double currentAngle = Math.atan2(y-center.y, x-center.x);
-                    double delta = Math.toDegrees(currentAngle-startAngle);
-                    selectedShape.rotate(delta);
-                    startAngle = currentAngle;
-                }else {
-                    selectedShape.resize(currentAnchor, dx, dy);
-                }
-                prevX = x;
-                prevY = y;
+    private void keepTransformer(int x,int y){
+        if(gToolBar.getCurrentType()==EShapeType.Select){
+            if(transformer!=null){
+                transformer.keep(x,y);
                 repaint();
             }
         }else if(currentShape!=null){
-            currentShape.setEnd(x, y);
+            currentShape.setEnd(x,y);
             repaint();
         }
     }
-    private void endTransformer(int x, int y) {
-        if (currentShape != null) {
-            currentShape.setEnd(x, y);
+    private void endTransformer(int x,int y){
+
+        if(transformer!=null){
+            transformer.end(x,y);
+            transformer=null;
+        }
+
+        if(currentShape!=null){
+            currentShape.setEnd(x,y);
             shapes.add(currentShape);
-            selectedShape = currentShape;
-            if(selectedShape!=null) {
+
+            selectedShape=currentShape;
+
+            if(selectedShape!=null){
                 gPropertyPanel.setShape(selectedShape);
             }
+
             gToolBar.setSelectedIndex(0);
-            currentShape = null;
-            System.out.println("선택된 도형: " + selectedShape + " 선택된 Anchor: " + currentAnchor);
+            currentShape=null;
+
             repaint();
         }
     }
