@@ -1,7 +1,9 @@
 package Frames;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.io.File;
 
 public class GMainFrame extends JFrame {
     private GMenuBar gMenuBar;
@@ -40,5 +42,32 @@ public class GMainFrame extends JFrame {
         this.setJMenuBar(gMenuBar);
         this.add(gToolBar, BorderLayout.NORTH);
         this.add(splitPane, BorderLayout.CENTER);
+
+        gMenuBar.setSaveListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+
+            fileChooser.setFileFilter(new FileNameExtensionFilter("Graphic Files (*txt)", "txt"));
+            int result = fileChooser.showSaveDialog(this);
+
+            if(result == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+
+                if(!file.getName().toLowerCase().endsWith(".txt")){
+                    file = new File(file.getAbsolutePath() + ".txt");
+                }
+                gDrawingPanel.save(file);
+            }
+        });
+
+        gMenuBar.setLoadListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+
+            fileChooser.setFileFilter(new FileNameExtensionFilter("Graphic Files (*txt)", "txt"));
+            int result = fileChooser.showSaveDialog(this);
+
+            if(result == JFileChooser.APPROVE_OPTION) {
+                gDrawingPanel.load(fileChooser.getSelectedFile());
+            }
+        });
     }
 }

@@ -5,6 +5,7 @@ import Global.EAnchor;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
+import java.io.PrintWriter;
 
 public class GLine extends GShape{
     public int startX, startY;
@@ -74,6 +75,31 @@ public class GLine extends GShape{
     @Override
     public String getShapeName() {
         return "선";
+    }
+
+    @Override
+    public void save(PrintWriter writer) {
+        Line2D line = (Line2D) geometry;
+
+        writer.println("LINE|"+
+                line.getX1()+"|"+
+                line.getY1()+"|"+
+                line.getX2()+"|"+
+                line.getY2()+"|"+
+                lineColor.getRGB());
+    }
+
+    @Override
+    public void load(String[] tokens) {
+        Double x0 = Double.parseDouble(tokens[1]);
+        Double y0 = Double.parseDouble(tokens[2]);
+        Double x1 = Double.parseDouble(tokens[3]);
+        Double y1 = Double.parseDouble(tokens[4]);
+        int lineColor = Integer.parseInt(tokens[5]);
+
+        setLineColor(new Color(lineColor));
+
+        geometry = new Line2D.Double(x0, y0, x1, y1);
     }
 
     @Override

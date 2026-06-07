@@ -4,6 +4,7 @@ import Global.EAnchor;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.PrintWriter;
 
 public class GText extends GShape {
 
@@ -76,6 +77,30 @@ public class GText extends GShape {
     @Override
     public String getShapeName() {
         return "텍스트";
+    }
+
+    @Override
+    public void save(PrintWriter writer) {
+
+        writer.println("TEXT|"+
+                x+"|"+
+                y+"|"+
+                fontSize+"|"+
+                lineColor.getRGB()+"|"+
+                text);
+    }
+
+    @Override
+    public void load(String[] tokens) {
+        this.x = Integer.parseInt(tokens[1]);
+        this.y = Integer.parseInt(tokens[2]);
+        this.fontSize = Integer.parseInt(tokens[3]);
+        this.lineColor = new Color(Integer.parseInt(tokens[4]));
+        this.text = tokens[5];
+
+        FontMetrics fm = Toolkit.getDefaultToolkit().getFontMetrics(new Font("Arial", Font.PLAIN, fontSize));
+        int width = Math.max(fm.stringWidth(text), 20);
+        geometry = new Rectangle(x, y-fm.getAscent(), width, fm.getHeight());
     }
 
     public int getFontSize() {

@@ -4,6 +4,7 @@ import Global.EAnchor;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.io.PrintWriter;
 
 public abstract class GShape implements Cloneable{
     protected Shape geometry;
@@ -101,4 +102,6 @@ public abstract class GShape implements Cloneable{
     public void rotate(double angle) {
         rotation += angle;
     }
+    public abstract void save(PrintWriter writer);
+    public abstract void load(String[] tokens);
 }

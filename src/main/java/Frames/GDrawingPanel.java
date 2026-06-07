@@ -5,10 +5,12 @@ import Global.EDrawingType;
 import Global.EShapeType;
 import Shapes.GShape;
 import Shapes.GText;
+import Tool.GFileManager;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.util.Vector;
 
 public class GDrawingPanel extends JPanel {
@@ -186,8 +188,38 @@ public class GDrawingPanel extends JPanel {
 
         repaint();
     }
+    public void save(File file) {
+        GFileManager fileManager = new GFileManager();
+        fileManager.save(file, shapes);
+    }
+    public void load(File file) {
+        GFileManager fileManager = new GFileManager();
 
+        shapes = fileManager.load(file);
 
+        selectedShape = null;
+        currentShape = null;
+        copiedShape = null;
+
+        if(gPropertyPanel != null) {
+            gPropertyPanel.setShape(null);
+        }
+
+        repaint();
+    }
+
+    //setter
+    public void setShapes(Vector<GShape> shapes) {
+        this.shapes = shapes;
+        selectedShape = null;
+
+        if(gPropertyPanel != null) {
+            gPropertyPanel.setShape(null);
+        }
+        repaint();
+    }
+
+    //이벤트 핸들러
     public class KeyHandler implements KeyListener {
 
         @Override
@@ -290,10 +322,6 @@ public class GDrawingPanel extends JPanel {
         public void mouseExited(MouseEvent e) {
         }
     }
-
-
-
-
 
     @Override
     protected void paintComponent(Graphics g) {

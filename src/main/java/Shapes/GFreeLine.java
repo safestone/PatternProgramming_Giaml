@@ -5,6 +5,8 @@ import Global.EAnchor;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
+import java.awt.geom.PathIterator;
+import java.io.PrintWriter;
 
 public class GFreeLine extends GShape{
     private static final int MIN_SIZE = 20;
@@ -156,6 +158,61 @@ public class GFreeLine extends GShape{
     @Override
     public String getShapeName() {
         return "자유선";
+    }
+
+    @Override
+    public void save(PrintWriter writer){
+
+        StringBuilder points = new StringBuilder();
+
+        PathIterator iterator = path.getPathIterator(null);
+
+        double[] coords = new double[6];
+
+        while(!iterator.isDone()){
+
+            int type = iterator.currentSegment(coords);
+
+            if(type == PathIterator.SEG_MOVETO || type == PathIterator.SEG_LINETO){
+                if(!points.isEmpty()){
+                    points.append(";");
+                }
+                points.append(coords[0]).append(",").append(coords[1]);
+            }
+            iterator.next();
+        }
+
+        writer.println("FREELINE|"+
+                rotation+"|"+
+                lineColor.getRGB()+"|"+
+                points);
+    }
+
+    @Override
+    public void load(String[] tokens) {
+        path = new Path2D.Double();
+
+        Double rotation = Double.parseDouble(tokens[1]);
+        int lineColor = Integer.parseInt(tokens[2]);
+
+        this.rotation = rotation;
+        setLineColor(new Color(lineColor));
+
+        String[] points = tokens[3].split(";");  //points[0] = 20.0, 23.0 points[1] = 32.0, 50.2 처럼 저장
+
+        for (int i = 0; i<points.length; i++) {
+            String[] xy = points[i].split(",");
+            double x = Double.parseDouble(xy[0]);
+            double y = Double.parseDouble(xy[1]);
+
+            if(i==0) {
+                path.moveTo(x, y);
+            } else {
+                path.lineTo(x, y);
+            }
+        }
+
+        geometry = path;
     }
 
 }
