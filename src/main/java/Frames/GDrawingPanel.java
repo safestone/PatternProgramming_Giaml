@@ -1,8 +1,10 @@
 package Frames;
 
+import DTO.GShapeInfo;
 import Global.EAnchor;
 import Global.EDrawingType;
 import Global.EShapeType;
+import Manager.GShapeManager;
 import Shapes.GShape;
 import Shapes.GText;
 import Tool.GFileManager;
@@ -21,13 +23,13 @@ public class GDrawingPanel extends JPanel {
     private GToolBar gToolBar;
     private GPropertyPanel gPropertyPanel;
     private GTransformer transformer;
+    private GLayerPanel gLayerPanel;
+    private GShapeManager shapeManager;
 
     private EAnchor currentAnchor;
 
-    private Vector<GShape> shapes;
     private GShape currentShape;
-    private GShape selectedShape;
-    private GShape copiedShape;
+
 
     private boolean isRotating = false;
 
@@ -42,9 +44,8 @@ public class GDrawingPanel extends JPanel {
         this.addKeyListener(keyHandler);
         this.setFocusable(true);
 
+        this.shapeManager = new GShapeManager();
         this.currentAnchor = EAnchor.eNone;
-
-        this.shapes = new Vector<>();
     }
     public void association(GToolBar gToolBar) {
         this.gToolBar = gToolBar;
@@ -52,55 +53,43 @@ public class GDrawingPanel extends JPanel {
     public void setPropertyPanel(GPropertyPanel gPropertyPanel) {
         this.gPropertyPanel = gPropertyPanel;
     }
+    public void setLayerPanel(GLayerPanel gLayerPanel) {
+        this.gLayerPanel = gLayerPanel;
+    }
     private void startTransformer(int x, int y) {
-        if(gToolBar.getCurrentType()== EShapeType.Select){
+        if(gToolBar.getCurrentType()==EShapeType.Select){
 
-            selectedShape = null;
-            currentAnchor = EAnchor.eNone;
+            setSelectedShape(null);
+            currentAnchor=EAnchor.eNone;
 
-            for(int i=shapes.size()-1; i>=0; i--){
+            GShapeInfo shapeInfo=shapeManager.findShapeInfo(x,y);
 
-                GShape shape = shapes.get(i);
+            if(shapeInfo!=null){
+                GShape shape=shapeInfo.getShape();
+                EAnchor anchor=shapeInfo.getAnchor();
 
-                // 1. 앵커 먼저 검사
-                EAnchor anchor = shape.getAnchor(x, y);
+                setSelectedShape(shape);
+                currentAnchor=anchor;
 
-                if(anchor!=EAnchor.eNone){
-                    selectedShape=shape;
-                    currentAnchor=anchor;
-
-                    if(anchor==EAnchor.eRotate){
-                        transformer=new GRotator(shape);
-                        isRotating = true;
-                    }else{
-                        transformer=new GResizer(shape,anchor);
-                    }
-
-                    transformer.start(x,y);
-                    break;
-                }
-
-                // 2. 도형 내부 검사
-                if(shape.getContains(x,y)){
-                    selectedShape=shape;
-                    currentAnchor=EAnchor.eNone;
-
+                if(anchor==EAnchor.eRotate){
+                    transformer=new GRotator(shape);
+                    isRotating=true;
+                }else if(anchor!=EAnchor.eNone){
+                    transformer=new GResizer(shape,anchor);
+                }else{
                     transformer=new GTranslator(shape);
-                    transformer.start(x,y);
-
-                    break;
                 }
+
+                transformer.start(x,y);
             }
-            gPropertyPanel.setShape(selectedShape);
-            System.out.println("선택된 도형: " + selectedShape + " 선택된 Anchor: " + currentAnchor);
+
+            System.out.println("선택된 도형: "+shapeManager.getSelectedShape()+" 선택된 Anchor: "+currentAnchor);
             repaint();
-        }
-        else{
+        } else{
             currentShape=gToolBar.getCurrentType().getShape();
             if(currentShape!=null){
                 currentShape.setStart(x,y);
-                selectedShape=null;
-                gPropertyPanel.setShape(null);
+                setSelectedShape(null);
             }
         }
     }
@@ -116,25 +105,19 @@ public class GDrawingPanel extends JPanel {
         }
     }
     private void endTransformer(int x,int y){
-
         if(transformer!=null){
             transformer.end(x,y);
             transformer=null;
         }
-
         if(currentShape!=null){
             currentShape.setEnd(x,y);
-            shapes.add(currentShape);
 
-            selectedShape=currentShape;
+            shapeManager.addShape(currentShape);
+            refreshLayerPanel();
 
-            if(selectedShape!=null){
-                gPropertyPanel.setShape(selectedShape);
-            }
-
+            setSelectedShape(currentShape);
             gToolBar.setSelectedIndex(0);
             currentShape=null;
-
             repaint();
         }
     }
@@ -145,31 +128,25 @@ public class GDrawingPanel extends JPanel {
         }
     }
     private void copyShape() {
-        if(selectedShape == null) {
-            return;
-        }
-
-        this.copiedShape = selectedShape.clone();
+        shapeManager.copy();
     }
 
     private void pasteShape() {
-        if(copiedShape == null) {
-            return;
+        GShape shape=shapeManager.paste();
+
+        if(shape!=null){
+            refreshLayerPanel();
+            setSelectedShape(shape);
         }
-        GShape shape = copiedShape.clone();
-        shape.transfer(20, 20);
-        shapes.add(shape);
-        selectedShape=shape;
-        gPropertyPanel.setShape(selectedShape);
-        repaint();
     }
 
     private void deleteShape() {
-        if(selectedShape != null) {
-            shapes.remove(selectedShape);
-            selectedShape = null;
-            gPropertyPanel.setShape(null);
-            repaint();
+        GShape shape=shapeManager.getSelectedShape();
+
+        if(shape!=null){
+            shapeManager.removeShape(shape);
+            refreshLayerPanel();
+            setSelectedShape(null);
         }
     }
 
@@ -192,35 +169,60 @@ public class GDrawingPanel extends JPanel {
     }
     public void save(File file) {
         GFileManager fileManager = new GFileManager();
-        fileManager.save(file, shapes);
+        fileManager.save(file, shapeManager.getShapes());
     }
     public void load(File file) {
-        GFileManager fileManager = new GFileManager();
+        GFileManager fileManager=new GFileManager();
 
-        shapes = fileManager.load(file);
+        shapeManager.setShapes(fileManager.load(file));
 
-        selectedShape = null;
-        currentShape = null;
-        copiedShape = null;
+        setSelectedShape(null);
+        currentShape=null;
 
-        if(gPropertyPanel != null) {
-            gPropertyPanel.setShape(null);
+        refreshLayerPanel();
+        repaint();
+    }
+    public void setSelectedShape(GShape shape) {
+        shapeManager.setSelectedShape(shape);
+
+        if(gPropertyPanel!=null){
+            gPropertyPanel.setShape(shape);
+        }
+
+        if(gLayerPanel!=null){
+            gLayerPanel.setSelectedShape(shape);
         }
 
         repaint();
     }
-
-    //setter
-    public void setShapes(Vector<GShape> shapes) {
-        this.shapes = shapes;
-        selectedShape = null;
-
-        if(gPropertyPanel != null) {
-            gPropertyPanel.setShape(null);
+    public void refreshLayerPanel() {
+        if(gLayerPanel!=null) {
+            gLayerPanel.setShapes(shapeManager.getShapes());
         }
+    }
+    public void bringToFront(){
+        shapeManager.bringToFront();
+        refreshLayerPanel();
         repaint();
     }
 
+    public void sendToBack(){
+        shapeManager.sendToBack();
+        refreshLayerPanel();
+        repaint();
+    }
+
+    public void bringForward(){
+        shapeManager.bringForward();
+        refreshLayerPanel();
+        repaint();
+    }
+
+    public void sendBackward(){
+        shapeManager.sendBackward();
+        refreshLayerPanel();
+        repaint();
+    }
     //이벤트 핸들러
     public class KeyHandler implements KeyListener {
 
@@ -252,7 +254,7 @@ public class GDrawingPanel extends JPanel {
     public class MouseHandler implements MouseListener, MouseMotionListener {
         @Override
         public void mouseClicked(MouseEvent e) {
-            if(e.getClickCount()==2&&selectedShape instanceof GText gText){
+            if(e.getClickCount()==2&&shapeManager.getSelectedShape() instanceof GText gText){
                 editText(gText);
             }
             if(gToolBar.getCurrentType().getDrawingType() == EDrawingType.eNPoint){
@@ -328,14 +330,18 @@ public class GDrawingPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D graphics2D = (Graphics2D) g;
-        for(GShape shape : shapes){
-            if(shape==selectedShape && !isRotating){
+
+        Graphics2D graphics2D=(Graphics2D)g;
+
+        for(GShape shape : shapeManager.getShapes()){
+            if(shape==shapeManager.getSelectedShape() && !isRotating){
                 shape.drawSelected(graphics2D);
             }
+
             shape.draw(graphics2D);
         }
-        if(currentShape != null) {
+
+        if(currentShape!=null){
             currentShape.draw(graphics2D);
         }
     }

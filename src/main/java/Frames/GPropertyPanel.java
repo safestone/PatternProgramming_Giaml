@@ -1,9 +1,6 @@
 package Frames;
 
-import Shapes.GFreeLine;
-import Shapes.GLine;
-import Shapes.GShape;
-import Shapes.GText;
+import Shapes.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -46,7 +43,7 @@ public class GPropertyPanel extends JPanel {
             fillColorButton.setEnabled(false);
         } else {
             typeLabel.setText(gShape.getShapeName());
-            if(gShape instanceof GLine || gShape instanceof GFreeLine || gShape instanceof GText){
+            if(gShape instanceof GLine || gShape instanceof GFreeLine || gShape instanceof GText || gShape instanceof GPolygon){
                 fillColorButton.setEnabled(false);
             }else{
                 fillColorButton.setEnabled(true);

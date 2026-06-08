@@ -3,6 +3,8 @@ package Frames;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 
 public class GMainFrame extends JFrame {
@@ -10,6 +12,7 @@ public class GMainFrame extends JFrame {
     private GToolBar gToolBar;
     private GDrawingPanel gDrawingPanel;
     private GPropertyPanel gPropertyPanel;
+    private GLayerPanel gLayerPanel;
 
     public GMainFrame() throws HeadlessException {
         super("Graphic Editor");
@@ -27,21 +30,28 @@ public class GMainFrame extends JFrame {
         this.gToolBar = new GToolBar();
         this.gDrawingPanel = new GDrawingPanel();
         this.gPropertyPanel = new GPropertyPanel();
-
+        this.gLayerPanel = new GLayerPanel();
 
         this.gDrawingPanel.association(gToolBar);
         this.gDrawingPanel.setPropertyPanel(gPropertyPanel);
         this.gPropertyPanel.setRepaintListener(
                 () -> gDrawingPanel.repaint()
         );
+        this.gLayerPanel.setDrawingPanel(gDrawingPanel);
+        this.gDrawingPanel.setLayerPanel(gLayerPanel);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, gDrawingPanel, gPropertyPanel);
 
-        splitPane.setResizeWeight(0.8);
+        JSplitPane centerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, gDrawingPanel, gPropertyPanel);
+        JSplitPane mainPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, gLayerPanel, centerPane);
+
+        mainPane.setDividerLocation(180);
+
+        centerPane.setResizeWeight(0.85);
+        mainPane.setResizeWeight(0.15);
 
         this.setJMenuBar(gMenuBar);
         this.add(gToolBar, BorderLayout.NORTH);
-        this.add(splitPane, BorderLayout.CENTER);
+        this.add(mainPane, BorderLayout.CENTER);
 
         gMenuBar.setSaveListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -68,6 +78,21 @@ public class GMainFrame extends JFrame {
             if(result == JFileChooser.APPROVE_OPTION) {
                 gDrawingPanel.load(fileChooser.getSelectedFile());
             }
+        });
+        gMenuBar.setBringToFrontListener(e -> {
+            gDrawingPanel.bringToFront();
+        });
+
+        gMenuBar.setBringFowardListener(e -> {
+            gDrawingPanel.bringForward();
+        });
+
+        gMenuBar.setSendBackwardListener(e -> {
+            gDrawingPanel.sendBackward();
+        });
+
+        gMenuBar.setSendToBackListener(e -> {
+            gDrawingPanel.sendToBack();
         });
     }
 }
